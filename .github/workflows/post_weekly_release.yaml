@@ -33,7 +33,7 @@ jobs:
           export CXX=clang++
           mkdir build_rel
           cd build_rel
-          cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../ -DASTCENC_ISA_NEON=ON -DASTCENC_ISA_SVE_128=ON -DASTCENC_ISA_SVE_256=ON -DASTCENC_PACKAGE=arm64 -DSHAREDLIB=ON ..
+          cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../ -DASTCENC_ISA_NEON=ON -DASTCENC_ISA_SVE_128=ON -DASTCENC_ISA_SVE_256=ON -DASTCENC_PACKAGE=arm64 -ASTCENC_SHAREDLIB=ON ..
           make install package -j4
 
       - name: Upload binaries
@@ -74,7 +74,7 @@ jobs:
           export CXX=clang++
           mkdir build_rel
           cd build_rel
-          cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../ -DASTCENC_ISA_AVX2=ON -DASTCENC_ISA_SSE41=ON -DASTCENC_ISA_SSE2=ON -DASTCENC_PACKAGE=x64 -DSHAREDLIB=ON ..
+          cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../ -DASTCENC_ISA_AVX2=ON -DASTCENC_ISA_SSE41=ON -DASTCENC_ISA_SSE2=ON -DASTCENC_PACKAGE=x64 -ASTCENC_SHAREDLIB=ON ..
           make install package -j4
 
       - name: Upload binaries
@@ -113,7 +113,7 @@ jobs:
         run: |
           mkdir build_rel
           cd build_rel
-          cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../ -DASTCENC_PACKAGE=universal -DSHAREDLIB=ON ..
+          cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../ -DASTCENC_PACKAGE=universal -ASTCENC_SHAREDLIB=ON ..
           make install package -j4
 
       - name: Upload binaries
@@ -154,7 +154,7 @@ jobs:
         run: |
           mkdir build_rel
           cd build_rel
-          cmake -G "Visual Studio 17 2022" -T ClangCL -DCMAKE_INSTALL_PREFIX=../ -DASTCENC_ISA_AVX2=ON -DASTCENC_ISA_SSE41=ON -DASTCENC_ISA_SSE2=ON -DASTCENC_PACKAGE=x64 -DSHAREDLIB=ON ..
+          cmake -G "Visual Studio 17 2022" -T ClangCL -DCMAKE_INSTALL_PREFIX=../ -DASTCENC_ISA_AVX2=ON -DASTCENC_ISA_SSE41=ON -DASTCENC_ISA_SSE2=ON -DASTCENC_PACKAGE=x64 -ASTCENC_SHAREDLIB=ON ..
           msbuild astcencoder.sln -property:Configuration=Release
           msbuild PACKAGE.vcxproj -property:Configuration=Release
           msbuild INSTALL.vcxproj -property:Configuration=Release
@@ -169,7 +169,7 @@ jobs:
         run: |
           mkdir build_rel_arm64
           cd build_rel_arm64
-          cmake -G "Visual Studio 17 2022" -A ARM64 -T ClangCL -DCMAKE_INSTALL_PREFIX=../ -DASTCENC_ISA_NEON=ON -DASTCENC_PACKAGE=arm64 -DSHAREDLIB=ON ..
+          cmake -G "Visual Studio 17 2022" -A ARM64 -T ClangCL -DCMAKE_INSTALL_PREFIX=../ -DASTCENC_ISA_NEON=ON -DASTCENC_PACKAGE=arm64 -ASTCENC_SHAREDLIB=ON ..
           msbuild astcencoder.sln -property:Configuration=Release
           msbuild PACKAGE.vcxproj -property:Configuration=Release
           msbuild INSTALL.vcxproj -property:Configuration=Release
