@@ -205,7 +205,11 @@ jobs:
     if: ${{ (startsWith(github.event.ref, 'refs/tags/'))}}
     name: Prepare release
     runs-on: ubuntu-22.04
-    needs: [build-ubuntu-x64]
+    needs:
+      - build-ubuntu-x64
+      - build-ubuntu-arm64
+      - build-macos-universal
+      - build-windows-multi
     steps:
       - name: Git checkout
         uses: actions/checkout@v4
