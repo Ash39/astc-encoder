@@ -13,55 +13,6 @@ on:
 
 jobs:
 
-  coverity:
-    if: ${{ (!startsWith(github.event.ref, 'refs/tags/')) && (github.repository_owner == 'Arm-software') }}
-    name: Run Coverity static analysis
-    runs-on: [self-hosted-ubuntu-latest-x64]
-    steps:
-      - name: Clean workspace
-        uses: AutoModality/action-clean@v1
-
-      - name: Git checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: 'true'
-
-      - name: Coverity preparation
-        run: |
-          export PATH=$PATH:/usr/local/cov-analysis/bin
-          mkdir build_cov
-          cd build_cov
-          cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=../ -DASTCENC_ISA_AVX2=ON ..
-          cov-configure --config ${GITHUB_WORKSPACE}/coverity.conf --template --compiler cc --comptype gcc
-          cov-configure --config ${GITHUB_WORKSPACE}/coverity.conf --template --compiler c++ --comptype g++
-
-      - name: Coverity build
-        run: |
-          export PATH=$PATH:/usr/local/cov-analysis/bin
-          cd build_cov
-          cov-build --config ${GITHUB_WORKSPACE}/coverity.conf --dir ${GITHUB_WORKSPACE}/intermediate make install
-
-      - name: Coverity analyze
-        run: |
-          export PATH=$PATH:/usr/local/cov-analysis/bin
-          cd build_cov
-          cov-analyze --dir ${GITHUB_WORKSPACE}/intermediate
-
-      - name: Coverity upload
-        env:
-          COVERITY_KEY: ${{ secrets.COVERITY_KEY }}
-        run: |
-          export PATH=$PATH:/usr/local/cov-analysis/bin
-          echo "${COVERITY_KEY}" > coverity.key
-          chmod 400 coverity.key
-          cd build_cov
-          cov-commit-defects \
-            --dir ${GITHUB_WORKSPACE}/intermediate \
-            --stream astcenc-master \
-            --url https://coverity.cambridge.arm.com \
-            --auth-key-file ../coverity.key \
-            --strip-path ${GITHUB_WORKSPACE}
-
   build-ubuntu-arm64:
     name: Ubuntu arm64
     runs-on: ubuntu-24.04-arm
@@ -250,80 +201,11 @@ jobs:
           python ./Test/astc_test_image.py --test-set Small
         shell: cmd
 
-  sign-binaries:
-    if: github.repository_owner == 'Arm-software'
-    name: Sign Windows and macOS
-    runs-on: [self-hosted-ubuntu-latest-x64]
-    needs: [build-macos-universal, build-windows-multi]
-    steps:
-      - name: Clean workspace
-        uses: AutoModality/action-clean@v1
-
-      - name: Checkout signing code
-        env:
-          SIGNING_REPO_URL: ${{ secrets.SIGNING_REPO_URL }}
-        run: |
-          git clone --depth 1 ${SIGNING_REPO_URL}
-
-      - name: Install code sign v2 client
-        env:
-          ARTIFACTORY_USER: ${{ secrets.ARTIFACTORY_USER }}
-          ARTIFACTORY_APIKEY: ${{ secrets.ARTIFACTORY_APIKEY }}
-          ARTIFACTORY_FQDN: ${{ secrets.ARTIFACTORY_FQDN }}
-        run: |
-          python3.11 -m venv cs
-          . ./cs/bin/activate
-          pip install -i https://${ARTIFACTORY_USER}:${ARTIFACTORY_APIKEY}@${ARTIFACTORY_FQDN}/artifactory/api/pypi/dsgcore.pypi/simple code-signer-client
-
-      - name: Download macOS binaries
-        uses: actions/download-artifact@v4
-        with:
-          name: astcenc-macos-universal
-          path: mac
-
-      - name: Download Windows binaries
-        uses: actions/download-artifact@v4
-        with:
-          name: astcenc-windows-multi-cl
-          path: windows
-
-      - name: Sign macOS binaries
-        env:
-          CODESIGNER_USER: ${{ secrets.CODESIGNER_USER }}
-        run: |
-          . ./cs/bin/activate
-          cd mac
-          python3 ${GITHUB_WORKSPACE}/signing/macos-client-wrapper.py ${CODESIGNER_USER} *.zip
-
-      - name: Sign Windows binaries
-        env:
-          ARTIFACTORY_APIKEY: ${{ secrets.ARTIFACTORY_APIKEY }}
-        run: |
-          . ./cs/bin/activate
-          cd windows
-          for FILENAME in */*; do mv ${FILENAME} .; done
-          for ZIPFILE in *.zip; do python3 ../signing/windows-client-wrapper.py -b ${GITHUB_RUN_NUMBER} -t ${ARTIFACTORY_APIKEY} ${ZIPFILE}; done
-
-      - name: Upload signed binaries
-        uses: actions/upload-artifact@v4
-        with:
-          name: signed-binaries
-          path: |
-            windows/*
-            mac/*
-
-      - name: Tidy intermediate artifacts
-        uses: geekyeggo/delete-artifact@v5
-        with:
-          name: |
-            astcenc-windows-multi-cl
-            astcenc-macos-universal
-
   prepare-release:
-    if: ${{ (startsWith(github.event.ref, 'refs/tags/')) && (github.repository_owner == 'Arm-software') }}
+    if: ${{ (startsWith(github.event.ref, 'refs/tags/'))}}
     name: Prepare release
     runs-on: ubuntu-22.04
-    needs: [sign-binaries, build-ubuntu-x64]
+    needs: [build-ubuntu-x64]
     steps:
       - name: Git checkout
         uses: actions/checkout@v4
