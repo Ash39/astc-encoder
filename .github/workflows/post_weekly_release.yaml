@@ -238,6 +238,11 @@ jobs:
           name: astcenc-linux-arm64
           path: prepare-release
 
+      - name: Flatten file structure
+        run: |
+          cd prepare-release
+          for FILENAME in */*; do mv ${FILENAME} .; done
+
       - name: Create checksum file
         run: |
           cd prepare-release
