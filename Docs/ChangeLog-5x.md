@@ -7,6 +7,40 @@ All performance data on this page is measured on an Intel Core i5-9600K
 clocked at 4.2 GHz, running `astcenc` using AVX2 and 6 threads.
 
 <!-- ---------------------------------------------------------------------- -->
+## 5.4.0
+
+**Status:** May 2026
+
+The 5.4.0 release is a minor feature release.
+
+This release includes changes to the public interface in the `astcenc.h`
+header. We always recommend rebuilding your client-side code using the
+header from the same release to avoid compatibility issues.
+
+* **General:**
+  * **Improvement:** The interface header `astcenc.h` is now C compliant to
+    make it usable from C programs.
+  * **Improvement:** Contexts using the same configuration can now share
+    read-only data tables. This can significantly reduce the amount of memory
+    needed for applications that parallelize by processing multiple images
+    in parallel instead of slicing a single image in parallel.
+  * **Improvement:** Decompressor (`astcdec`) builds, which lack compression
+    support, now use a smaller `block_size_descriptor` by omitting fields that
+    are only needed for compression. This reduces the size of a decompressor
+    context by more than 10MB!
+  * **Optimization:** A SIMD backend for the RISC-V Vector extensions has been
+    added, and is auto-selected when configured with `ASTCENC_ISA_NONE` and a
+    core with a 256-bit vector width. See [Building.md](Building.md) for
+    details.
+  * **Bug fix:** Avoid using an undefined `quant_weight` value if all one
+    partition trials return an error block.
+  * **Bug fix:** Remove remaining instances of type aliasing through unions.
+  * **Bug fix:** Avoid compiler double definition warning for `NOMINMAX` when
+    compiling with MinGW.
+  * **Bug fix:** Avoid compiler floating point model override warning when
+    compiling with Clang 20.
+
+<!-- ---------------------------------------------------------------------- -->
 ## 5.3.0
 
 **Status:** March 2025
@@ -34,7 +68,7 @@ The 5.3.0 release is a minor maintenance release.
 The 5.2.0 release is a minor maintenance release.
 
 This release includes changes to the public interface in the `astcenc.h`
-header.  We always recommend rebuilding your client-side code using the
+header. We always recommend rebuilding your client-side code using the
 header from the same release to avoid compatibility issues.
 
 * **General:**
@@ -102,4 +136,4 @@ set.
 
 - - -
 
-_Copyright © 2022-2025, Arm Limited and contributors. All rights reserved._
+_Copyright © 2022-2026, Arm Limited and contributors._

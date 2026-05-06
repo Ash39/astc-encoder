@@ -114,9 +114,9 @@ cd build
 make install -j16
 ```
 
-## macOS using XCode
+## macOS using Xcode
 
-Builds for macOS and Linux are tested with CMake 3.17, and XCode 14.0 or
+Builds for macOS and Linux are tested with CMake 3.17, and Xcode 14.0 or
 newer.
 
 ### Configuring the build
@@ -183,6 +183,10 @@ by adding `-DASTCENC_BLOCK_MAX_TEXELS=<texel_count>` to to CMake command line
 when configuring. Legal block sizes that are unavailable in a restricted build
 will return the error `ASTCENC_ERR_NOT_IMPLEMENTED` during context creation.
 
+If your use case only needs to support the 2D texture format, we recommend
+that you use `-DASTCENC_BLOCK_MAX_TEXELS=144` which will support all 2D block
+sizes.
+
 ### Non-invariant builds
 
 All normal builds are designed to be invariant, so any build from the same git
@@ -248,12 +252,13 @@ CMake command line when configuring.
 
 ### Android builds
 
-Builds of the command line utility for Android are not officially supported, but can be a useful
-development build for testing on e.g. different Arm CPU microarchitectures.
+Builds of the command line utility for Android are not officially supported,
+but can be a useful development build for testing on e.g. different Arm CPU
+microarchitectures.
 
-The build script below shows one possible route to building the command line tool for Android. Once
-built the application can be pushed to e.g. `/data/local/tmp` and executed from an Android shell
-terminal over `adb`.
+The build script below shows one possible route to building the command line
+tool for Android. Once built the application can be pushed to, e.g.,
+`/data/local/tmp` and executed from an Android shell terminal over `adb`.
 
 ```shell
 ANDROID_ABI=arm64-v8a
@@ -283,6 +288,30 @@ cmake \
 make -j16
 ```
 
+### Enabling the VLEN=256 RISC-V Vector backend
+
+The current RISC-V Vector backend only supports VLEN=256 hardware, due to
+toolchain limitations that make a vector-length-agnostic port challenging.
+Hopefully there will be one in the future.
+
+Since the backend only works when the VLEN is exactly 256, and you can only
+enable this as a global compiler flag, there is no separate build target for
+the backend yet. To enable it, simple build the none or native build target,
+with the `-mrvv-vector-bits=zvl` CXXFLAG and a `zvl256b` in the ISA string.
+
+You can cross-compile to RISC-V with the backend enabled using the following
+commands:
+
+```bash
+export CXX=riscv64-linux-gnu-g++
+export CXXFLAGS="-march=rv64gcv_zvl256b -mrvv-vector-bits=zvl"
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DASTCENC_ISA_NONE=ON ..
+cmake --build build -j$(nproc)
+```
+
+See also [.github/workflows](../.github/workflows) for how the CI builds and
+runs the unit tests.
+
 ## Packaging a release bundle
 
 We support building a release bundle of all enabled binary configurations in
@@ -310,6 +339,37 @@ and the codec API usage can be found in the `./Utils/Example` directory in the
 repository. See the [Example Readme](../Utils/Example/README.md) for more
 details.
 
+## Configuring a new build machine
+
+Install native packages:
+
+```shell
+sudo apt update
+
+# Build tools
+sudo apt install clang cmake git
+
+# Test tools
+sudo apt install imagemagick python3-pip
+
+# Profile tools
+sudo apt install graphviz valgrind
+```
+
+Install Python modules from within a virtual environment:
+
+```shell
+# Setup virtual environment
+python3 -m venv pve
+. ./pve/bin/activate
+
+# Test tools
+python3 -m pip install numpy pillow pycodestyle pylint
+
+# Profile tools
+python3 -m pip install gprof2dot
+```
+
 - - -
 
-_Copyright © 2019-2024, Arm Limited and contributors. All rights reserved._
+_Copyright © 2019-2026, Arm Limited and contributors._
